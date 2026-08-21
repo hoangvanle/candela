@@ -26,3 +26,9 @@ yarn-error.log*
 coverage/
 playwright-report/
 test-results/
+
+# playwright browsers
+.playwright/
+
+# tsc build info
+*.tsbuildinfo

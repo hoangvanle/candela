@@ -1,0 +1,67 @@
+/* SPEC §8. These values are the design system — do not inline colours or sizes
+   anywhere else. Twenty tokens and a dozen components is the whole thing. */
+:root {
+  /* surfaces */
+  --bg: #fbf7f3;
+  --card: #ffffff;
+
+  /* ink — --ink3 is the lightest text permitted on --bg (4.7:1). Do not lighten. */
+  --ink: #1b1411;
+  --ink2: #655952;
+  --ink3: #7a6c63;
+
+  /* rules */
+  --line: #ece4dc;
+  --line2: #ded3c9;
+
+  /* accents */
+  --ember: #d9452a;
+  --ember-2: #b3341d;
+  --ember-soft: #fdece6;
+  --teal: #0e7c7b;
+  --teal-soft: #e4f2f1;
+  --gold: #b5820a;
+  --gold-soft: #fbf0d8;
+  --purple: #6b4e9e;
+  --purple-soft: #f0ebfa;
+  --blue: #2e6bb8;
+  --blue-soft: #e7eff9;
+
+  /* The system stack. No web fonts — they cost a round trip on first paint. */
+  --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+
+  /* type — SPEC §8 */
+  --t-line: 15.5px;
+  --t-line-lh: 1.42;
+  --t-move: 19.5px;
+  --t-nav: 16px;
+  --t-sec: 13px;
+  --t-label: 10.5px;
+  --t-field: 16.5px; /* below 16px iOS zooms the page on focus */
+
+  /* radii */
+  --r-card: 15px;
+  --r-field: 12px;
+  --r-field-lg: 13px;
+  --r-sheet: 24px;
+  --r-pill: 999px;
+
+  /* motion */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --fast: 160ms;
+  --slow: 260ms;
+
+  /* Minimum touch target, SPEC §8. */
+  --tap: 44px;
+
+  /* Set from visualViewport so the composer sits on the keyboard, not under it. */
+  --vh: 100dvh;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --fast: 1ms;
+    --slow: 1ms;
+  }
+}

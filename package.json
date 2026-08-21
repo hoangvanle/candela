@@ -1,0 +1,30 @@
+{
+  "name": "candela",
+  "private": true,
+  "version": "0.2.0",
+  "type": "module",
+  "description": "Prep notes for teaching Cuban salsa at La Candela",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview --host",
+    "icons": "node scripts/make-icons.mjs",
+    "test": "playwright test"
+  },
+  "dependencies": {
+    "dexie": "^4.4.5",
+    "fractional-indexing": "^4.0.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "@types/node": "^26.2.0",
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react": "^6.1.0",
+    "typescript": "^5.9.3",
+    "vite": "^8.2.2",
+    "vite-plugin-pwa": "^1.3.0"
+  }
+}
