@@ -54,6 +54,10 @@ test('screens', async ({ page }) => {
   await shot('6-write-into');
   await page.locator('.menuscrim').click();
 
+  await page.locator('.linerow').first().click();
+  await shot('6b-edit-in-place');
+  await page.locator('.edrow').getByRole('button', { name: 'Cancel' }).click();
+
   await page.locator('.moverow').first().click({ position: { x: 200, y: 10 } });
   await page.locator('.chip.here').waitFor({ state: 'attached' }).catch(() => {});
 

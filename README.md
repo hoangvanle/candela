@@ -34,6 +34,9 @@ Working now:
 - **Capture** — the stream, the composer with its move token and accessory bar,
   return-to-commit, new-move mode, `!` / `?` flags, the `Tag it?` prompt, the
   `Write into` menu, and a suggestion when a move name matches one written down before.
+- **Edit in place** — tap any line or move title and the row becomes a field, with the
+  `!` / `?` toggles on it. Return or the tick saves, Escape or Cancel reverts everything
+  the edit touched. No modal, and the composer dims while it is open.
 - **Classes** — notes grouped by `Level n · Block n`, with move, line and open-question
   counts.
 - Everything is stored in IndexedDB the moment you press return, and ordered by
@@ -43,7 +46,7 @@ Not built yet, and deliberately so:
 
 | | Build order |
 | --- | --- |
-| Inline edit, swipe, long-press menu, drag reorder, undo | step 3 |
+| Swipe to delete or flag, long-press menu, drag reorder, undo | step 3 |
 | Review — the brief, one look / every detail, raw capture | step 4 |
 | Moves and Ask Ido tabs, search | step 5 |
 | Supabase sync | step 6 |
@@ -52,8 +55,19 @@ The Moves, Ask Ido and Review routes exist and say which step they are waiting o
 Review lands, tapping a class opens it in Capture — the stream is already readable there,
 and `Done` goes back to the list.
 
-**A typo cannot be fixed yet.** Repair is step 3. Retype the line; nothing is destroyed
-and the raw order is kept.
+**A line cannot be deleted or moved yet** — those are the gesture half of step 3. Fixing
+the words works: tap the row.
+
+### The keyboard eats the screen
+
+On a 393×852 iPhone the keyboard leaves about 420px, and the app's own chrome takes 150 of
+it. Two of the bars in that gap are not the app's: iOS stacks its predictive-text row and
+its AutoFill row above the keyboard, together about 90px — more than half of what is left
+after the composer. Both can be turned off, and it is the single biggest thing that makes
+the stream readable while typing:
+
+- Settings → General → Keyboard → **Vorhersage** off
+- Settings → Safari → AutoFill → **Kontaktinfo verwenden** off
 
 ## Running it
 

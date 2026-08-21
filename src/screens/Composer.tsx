@@ -6,6 +6,8 @@ export type LibraryHit = { name: string; where: string };
 
 type Props = {
   inputRef: RefObject<HTMLInputElement>;
+  /** Dimmed and inert while a row is being edited in place (SPEC §7). */
+  disabled: boolean;
   /** New-move mode: the token turns ember and reads NEW MOVE (SPEC §6.3). */
   pending: boolean;
   /** The move being written into, or null for the end of the note. */
@@ -31,6 +33,7 @@ type Props = {
  */
 export function Composer({
   inputRef,
+  disabled,
   pending,
   currentMove,
   armedFlag,
@@ -80,7 +83,10 @@ export function Composer({
   }, [onOpenSwitch]);
 
   return (
-    <div className="composer" ref={barRef}>
+    // `.off` dims it and takes it out of the pointer path. Not aria-hidden: the
+    // subtree is still tabbable, and hiding a tabbable subtree is worse than
+    // leaving it announced. Revisited with the rest of SPEC §7.
+    <div className={`composer${disabled ? ' off' : ''}`} ref={barRef}>
       {hit ? (
         <div className="sugg">
           <div className="grow">

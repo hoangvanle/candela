@@ -146,6 +146,13 @@ input {
   flex: none;
 }
 
+/* While the keyboard is up, every pixel belongs to the stream. Only the padding
+   is worth taking: the bar's height is set by the 40px buttons, so hiding the
+   subtitle costs the line count and gains nothing. Measured, not assumed. */
+:root[data-keyboard='up'] .navbar {
+  padding-bottom: 4px;
+}
+
 /* ---------------- type ---------------- */
 
 .h-sec {
@@ -601,6 +608,79 @@ input {
   background: var(--ink3);
 }
 
+/* Rows are tap targets: tapping one edits it in place (SPEC §7). Focusable, so
+   Enter does the same thing from a keyboard (SPEC §9). */
+.itemrow {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+}
+
+.itemrow:focus-visible {
+  outline: 2px solid var(--ember);
+  outline-offset: -2px;
+  border-radius: 8px;
+}
+
+/* Editing happens on the row, in view — never in a modal (CLAUDE.md rule 4). */
+.edrow {
+  padding: 4px 12px 8px 24px;
+}
+
+.edrow .box {
+  padding: 9px 12px;
+  background: var(--card);
+  border: 1.5px solid var(--ember);
+  border-radius: var(--r-field);
+  box-shadow: 0 4px 14px rgba(217, 69, 42, 0.13);
+}
+
+.edrow input {
+  width: 100%;
+  font-size: var(--t-field);
+  line-height: 1.35;
+}
+
+.edrow .tools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 9px;
+}
+
+.edrow .tools button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--ink2);
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.edrow .tools button.on {
+  background: var(--ember);
+  color: #fff;
+}
+
+.edrow .tools button.flag-q.on {
+  background: var(--gold);
+  color: #fff;
+}
+
+.edrow .tools .sp {
+  flex: 1;
+}
+
+.edrow .tools button.done {
+  background: var(--ember);
+  color: #fff;
+}
+
 /* An answered question shows the answer under its line, everywhere. */
 .answer {
   margin: 2px 16px 4px 37px;
@@ -669,6 +749,11 @@ input {
   flex: none;
   background: var(--bg);
   border-top: 1px solid var(--line);
+}
+
+.composer.off {
+  opacity: 0.35;
+  pointer-events: none;
 }
 
 .inrow {
@@ -826,10 +911,16 @@ input {
   flex: 1;
 }
 
-/* Keyboard-down padding. iOS zeroes this inset while the keyboard is up. */
+/* Home-indicator padding, but only when there is a home indicator to clear.
+   iOS keeps reporting the inset behind the keyboard, where it is 34px of dead
+   grey between the accessory bar and the keyboard. */
 .composer .safe {
   height: env(safe-area-inset-bottom);
   background: #dcd6d0;
+}
+
+:root[data-keyboard='up'] .composer .safe {
+  height: 0;
 }
 
 .sugg {

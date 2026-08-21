@@ -26,7 +26,7 @@ type LibEntry = { id: ID; name: string; where: string; at: string };
 export function Capture({ noteId }: { noteId: ID }) {
   const [note, setNote] = useState<Note | null>(null);
   const [missing, setMissing] = useState(false);
-  const { items, status, insert, toggleTag } = useItems(noteId);
+  const { items, status, insert, patch, toggleTag } = useItems(noteId);
   const { tags, create: createTag } = useTags();
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -40,6 +40,7 @@ export function Capture({ noteId }: { noteId: ID }) {
   const [switchBottom, setSwitchBottom] = useState<number | null>(null);
   const [hit, setHit] = useState<LibraryHit | null>(null);
   const [justAdded, setJustAdded] = useState<ID | null>(null);
+  const [editingId, setEditingId] = useState<ID | null>(null);
 
   const moves = useMemo(() => movesOf(items), [items]);
   const currentMove = useMemo(
@@ -114,7 +115,25 @@ export function Capture({ noteId }: { noteId: ID }) {
     viewRef.current
       ?.querySelector(`[data-id="${justAdded}"]`)
       ?.scrollIntoView({ block: 'nearest' });
-  }, [justAdded, items]);
+  }, [justAdded]);
+
+  /* The keyboard opening shrinks the scroll area, and the browser keeps the
+     scroll offset — so whatever she was writing slides out of sight. Put the
+     write position back in view whenever the viewport changes size. */
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const repin = () =>
+      requestAnimationFrame(() => {
+        const el = viewRef.current;
+        if (!el) return;
+        const target = justAdded ? el.querySelector(`[data-id="${justAdded}"]`) : null;
+        if (target) target.scrollIntoView({ block: 'nearest' });
+        else el.scrollTop = el.scrollHeight;
+      });
+    vv.addEventListener('resize', repin);
+    return () => vv.removeEventListener('resize', repin);
+  }, [justAdded]);
 
   /* Opening an existing note lands at the end of it. */
   const scrolledOnLoad = useRef(false);
@@ -213,6 +232,25 @@ export function Capture({ noteId }: { noteId: ID }) {
     [refocus],
   );
 
+  const startEdit = useCallback((id: ID) => {
+    setEditingId(id);
+    setTagPromptFor(null);
+  }, []);
+
+  const saveEdit = useCallback(
+    (id: ID, text: string, flag: Flag) => {
+      patch(id, { text, flag });
+      setEditingId(null);
+      refocus();
+    },
+    [patch, refocus],
+  );
+
+  const cancelEdit = useCallback(() => {
+    setEditingId(null);
+    refocus();
+  }, [refocus]);
+
   const openTagSheet = useCallback((moveId: ID) => setTagSheetFor(moveId), []);
 
   const closeTagSheet = useCallback(() => {
@@ -267,13 +305,18 @@ export function Capture({ noteId }: { noteId: ID }) {
           tags={tags}
           currentMoveId={currentMoveId}
           tagPromptFor={tagPromptFor}
+          editingId={editingId}
           onToggleTag={toggleTag}
           onOpenTagSheet={openTagSheet}
+          onStartEdit={startEdit}
+          onSaveEdit={saveEdit}
+          onCancelEdit={cancelEdit}
         />
       </div>
 
       <Composer
         inputRef={inputRef}
+        disabled={editingId !== null}
         pending={pending}
         currentMove={currentMove}
         armedFlag={armedFlag}

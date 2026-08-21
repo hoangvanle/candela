@@ -305,3 +305,100 @@ test('a move already written down is offered, and linking keeps its spelling', a
   await expect(moveTitles(page)).toHaveText(['Sombrero']);
   await expect(page.locator('.libnote')).toContainText('written down before');
 });
+
+test('tapping a line edits it in place, return saves (§7)', async ({ page }) => {
+  await startNote(page);
+  await say(page, 'Sombrero');
+  await say(page, 'her rihgt hand behind your nekc');
+
+  await page.locator('.linerow').click();
+  // The row became a field, in view — no modal appeared (rule 4).
+  const field = page.locator('.edrow input');
+  await expect(field).toBeFocused();
+  await expect(page.locator('.sheet, .scrim')).toHaveCount(0);
+  // The composer is out of the way while the row is being edited.
+  await expect(page.locator('.composer.off')).toBeVisible();
+
+  await field.fill('her right hand behind your neck');
+  await field.press('Enter');
+
+  await expect(lines(page)).toHaveText(['her right hand behind your neck']);
+  await expect(page.locator('.edrow')).toHaveCount(0);
+  // Focus goes back to the composer, so the next line can just be typed.
+  await expect(composer(page)).toBeFocused();
+
+  await page.reload();
+  await expect(lines(page)).toHaveText(['her right hand behind your neck']);
+});
+
+test('escape cancels an edit and changes nothing', async ({ page }) => {
+  await startNote(page);
+  await say(page, 'Adiós');
+  await say(page, 'half turn on 3');
+
+  await page.locator('.linerow').click();
+  const field = page.locator('.edrow input');
+  await field.fill('something else entirely');
+  // Arming a flag mid-edit must be undone by the cancel too.
+  await page.locator('.edrow').getByRole('button', { name: 'important' }).click();
+  await field.press('Escape');
+
+  await expect(lines(page)).toHaveText(['half turn on 3']);
+  await expect(page.locator('.linerow.imp')).toHaveCount(0);
+  await expect(composer(page)).toBeFocused();
+});
+
+test('a flag can be added and removed while editing a line', async ({ page }) => {
+  await startNote(page);
+  await say(page, 'Peso en el suelo');
+  await say(page, 'weight through the whole foot');
+
+  await page.locator('.linerow').click();
+  await page.locator('.edrow').getByRole('button', { name: 'ask Ido' }).click();
+  await page.locator('.edrow').getByRole('button', { name: 'Save' }).click();
+  await expect(page.locator('.linerow.q .fm')).toHaveText('?');
+  // Flagging a line as a question puts it on the Ask Ido badge immediately.
+  await page.getByRole('button', { name: 'Done' }).click();
+  await expect(page.locator('.tabbar .badge')).toHaveText('1');
+
+  await page.locator('.classrow').click();
+  await page.locator('.linerow').click();
+  await page.locator('.edrow').getByRole('button', { name: 'ask Ido' }).click();
+  await page.locator('.edrow').getByRole('button', { name: 'Save' }).click();
+  await expect(page.locator('.linerow.q')).toHaveCount(0);
+});
+
+test('a move title can be renamed, and has no flag toggles', async ({ page }) => {
+  await startNote(page);
+  await say(page, 'Sombrro');
+  await say(page, 'her right hand behind your neck');
+
+  await page.locator('.moverow').click();
+  const field = page.locator('.edrow input');
+  await expect(field).toHaveValue('Sombrro');
+  // A move carries no flag, so it is not offered one.
+  await expect(page.locator('.edrow').getByRole('button', { name: 'important' })).toHaveCount(0);
+  await expect(page.locator('.edrow').getByRole('button', { name: 'ask Ido' })).toHaveCount(0);
+
+  await field.fill('Sombrero');
+  await field.press('Enter');
+
+  await expect(moveTitles(page)).toHaveText(['Sombrero']);
+  // Renaming does not detach the lines under it.
+  await expect(lines(page)).toHaveText(['her right hand behind your neck']);
+  // The composer token follows the rename.
+  await expect(page.locator('.token')).toHaveText('Sombrero');
+});
+
+test('clearing a row entirely cancels instead of leaving it blank', async ({ page }) => {
+  await startNote(page);
+  await say(page, 'Dame');
+  await say(page, 'teach the circle before the call');
+
+  await page.locator('.linerow').click();
+  await page.locator('.edrow input').fill('   ');
+  await page.locator('.edrow input').press('Enter');
+
+  // Nothing is destroyed — the line is still there, unchanged.
+  await expect(lines(page)).toHaveText(['teach the circle before the call']);
+});

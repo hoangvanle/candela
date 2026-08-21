@@ -18,6 +18,11 @@ function useViewportHeight(): void {
     const apply = () => {
       const h = vv ? vv.height : window.innerHeight;
       document.documentElement.style.setProperty('--vh', `${h}px`);
+      // env(safe-area-inset-bottom) describes the *layout* viewport, so iOS keeps
+      // reporting 34px behind the keyboard. Knowing the keyboard is up lets the
+      // CSS give that strip back — it is a quarter of the visible stream.
+      const keyboardUp = window.innerHeight - h > 120;
+      document.documentElement.dataset.keyboard = keyboardUp ? 'up' : 'down';
     };
     apply();
     vv?.addEventListener('resize', apply);
