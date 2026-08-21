@@ -40,7 +40,9 @@ Working now:
 - **Classes** — notes grouped by `Level n · Block n`, with move, line and open-question
   counts.
 - Everything is stored in IndexedDB the moment you press return, and ordered by
-  fractional index rather than array position.
+  fractional index rather than array position. A write IndexedDB has not confirmed yet is
+  dumped to `localStorage` on teardown and replayed on the next read, so a force-quit in
+  the millisecond after a Return cannot take the line with it.
 
 Not built yet, and deliberately so:
 

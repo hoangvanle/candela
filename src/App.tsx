@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { setPersistErrorHandler } from './db/repo';
+import { setPersistErrorHandler, stashInFlight } from './db/repo';
 import { useRoute } from './router';
 import { useAppUpdate } from './store/useAppUpdate';
 import { Capture } from './screens/Capture';
@@ -48,6 +48,22 @@ export default function App() {
   // to IndexedDB fails, she finds out while she can still do something about it.
   const [persistFailed, setPersistFailed] = useState(false);
   useEffect(() => setPersistErrorHandler(() => setPersistFailed(true)), []);
+
+  /* Anything IndexedDB has not confirmed yet goes somewhere synchronous before
+     the document is torn down. `visibilitychange` is the one iOS reliably fires
+     when the app is backgrounded or killed; `pagehide` covers reloads. */
+  useEffect(() => {
+    const stash = () => stashInFlight();
+    const onHidden = () => {
+      if (document.visibilityState === 'hidden') stash();
+    };
+    window.addEventListener('pagehide', stash);
+    document.addEventListener('visibilitychange', onHidden);
+    return () => {
+      window.removeEventListener('pagehide', stash);
+      document.removeEventListener('visibilitychange', onHidden);
+    };
+  }, []);
 
   // SPEC §6: the tab bar is hidden on Capture — a full-screen editing context.
   const showTabs = route.name !== 'capture';
