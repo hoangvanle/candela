@@ -31,6 +31,26 @@ test('the build footer names the build and reloads the app', async ({ page }) =>
   await expect(page.locator('.classrow .t')).toHaveText('Class 1');
 });
 
+test('a launch logs nothing to the console', async ({ page }) => {
+  const noise: string[] = [];
+  page.on('console', (m) => m.type() === 'error' && noise.push(m.text()));
+  page.on('pageerror', (e) => noise.push(String(e)));
+
+  await page.goto('./');
+  // The update check runs on mount, before registerSW.js has finished; it must
+  // not throw InvalidStateError at a registration that is still settling.
+  await expect(page.locator('.buildfoot')).toBeVisible();
+  await page.waitForFunction(() => navigator.serviceWorker?.controller != null, null, {
+    timeout: 20_000,
+  });
+  // Coming back to the foreground checks again — also on a live registration.
+  await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
+  await page.locator('.buildfoot button').click();
+  await expect(page.locator('.buildfoot')).toBeVisible();
+
+  expect(noise).toEqual([]);
+});
+
 test('the reload control stays off the capture screen', async ({ page }) => {
   await page.goto('./');
   await page.getByRole('button', { name: 'Start typing' }).click();

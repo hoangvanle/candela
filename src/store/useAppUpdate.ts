@@ -36,7 +36,12 @@ export function useAppUpdate() {
     setChecking(true);
     try {
       const reg = await navigator.serviceWorker.getRegistration();
-      await reg?.update();
+      // update() on a registration with no active worker throws
+      // InvalidStateError, and at start registerSW.js has usually not finished
+      // yet — it registers on window load. Skipping then is right anyway: a
+      // registration that is still installing is already fetching the newest
+      // version, and the foreground check will catch anything later.
+      if (reg?.active) await reg.update();
     } catch (e) {
       // Offline, or the host is unreachable. Nothing to do and nothing to say.
       console.error('[candela] update check failed', e);
