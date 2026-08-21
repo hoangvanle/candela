@@ -58,6 +58,24 @@ and `Done` goes back to the list.
 **A line cannot be deleted or moved yet** — those are the gesture half of step 3. Fixing
 the words works: tap the row.
 
+### Getting a new version onto the phone
+
+`registerType: 'autoUpdate'` installs a new service worker and lets it take over, but it
+never reloads the page — and relaunching an installed iOS PWA usually *resumes* it rather
+than reloading. So a new version can sit there indefinitely and deleting the app looks
+like the only way out. It is not:
+
+- The **New note** tab has a `Build` stamp and a **Reload** button at the bottom. One tap,
+  from anywhere in the app. Compare the stamp against the deploy to confirm it changed.
+- When a new version arrives on its own, a teal `A newer version is ready` strip appears
+  with a Reload action.
+
+Neither ever appears on Capture, and nothing reloads by itself — a reload there would take
+the half-typed line in the composer with it.
+
+Both are test-build scaffolding. To remove: delete `src/ui/BuildFooter.tsx`, the
+`.buildfoot` and `.update-bar` blocks in `base.css`, and their two usages.
+
 ### The keyboard eats the screen
 
 On a 393×852 iPhone the keyboard leaves about 420px, and the app's own chrome takes 150 of

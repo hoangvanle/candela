@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { setPersistErrorHandler } from './db/repo';
 import { useRoute } from './router';
+import { useAppUpdate } from './store/useAppUpdate';
 import { Capture } from './screens/Capture';
 import { Classes } from './screens/Classes';
 import { NewNote } from './screens/NewNote';
@@ -41,6 +42,7 @@ function useViewportHeight(): void {
 export default function App() {
   const route = useRoute();
   useViewportHeight();
+  const { buildId, stale, checking, reload } = useAppUpdate();
 
   // "Nothing is ever lost" is the one promise this app has to keep. If a write
   // to IndexedDB fails, she finds out while she can still do something about it.
@@ -49,6 +51,8 @@ export default function App() {
 
   // SPEC §6: the tab bar is hidden on Capture — a full-screen editing context.
   const showTabs = route.name !== 'capture';
+  // Never offer a reload mid-capture; it would take the half-typed line with it.
+  const offerUpdate = stale && route.name !== 'capture';
 
   return (
     <>
@@ -59,7 +63,14 @@ export default function App() {
         </div>
       ) : null}
 
-      {route.name === 'new' ? <NewNote /> : null}
+      {offerUpdate ? (
+        <div className="update-bar" role="status">
+          <span className="grow">A newer version is ready.</span>
+          <button onClick={reload}>Reload</button>
+        </div>
+      ) : null}
+
+      {route.name === 'new' ? <NewNote update={{ buildId, checking, reload }} /> : null}
       {route.name === 'classes' ? <Classes /> : null}
       {route.name === 'capture' ? <Capture noteId={route.noteId} /> : null}
       {route.name === 'review' ? (

@@ -30,8 +30,6 @@ test('a whole prep session survives the network being cut', async ({ page, conte
   await say(page, '!you duck under, do not lift your arms');
   await say(page, '?does the hat land on 5 or on 7');
 
-  const noteUrl = page.url();
-
   // Airplane mode.
   await context.setOffline(true);
   await page.reload();
@@ -48,9 +46,13 @@ test('a whole prep session survives the network being cut', async ({ page, conte
   await say(page, 'hat lands on 5, unwind on 6-7');
   await expect(page.locator('.linerow .grow')).toHaveCount(4);
 
-  // A cold launch from the home screen starts at the app root, not this note.
-  await page.goto(new URL('./', noteUrl).href);
-  await expect(page.locator('.hero h2')).toBeVisible();
-  await page.locator('.tabbar a', { hasText: 'Classes' }).click();
+  // Leave via Done, the way the app does it — a hash change, not a document
+  // navigation. The Classes list reads back out of IndexedDB, so reaching it with
+  // the right counts is what proves the writes landed.
+  await page.getByRole('button', { name: 'Done' }).click();
+  await expect(page.locator('.classrow .s')).toContainText('1 move · 5 lines');
+
+  // A cold launch, still offline: shell from the precache, note from IndexedDB.
+  await page.reload();
   await expect(page.locator('.classrow .s')).toContainText('1 move · 5 lines');
 });

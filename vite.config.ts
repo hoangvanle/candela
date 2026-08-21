@@ -13,8 +13,20 @@ import { VitePWA } from 'vite-plugin-pwa';
  */
 const BASE = '/candela/';
 
+/**
+ * Stamped into the bundle so the build running on the phone can be identified at
+ * a glance. The sha is the real identity; the timestamp is for reading.
+ */
+const BUILD_ID = [
+  new Date().toISOString().slice(0, 16).replace('T', ' '),
+  process.env.GITHUB_SHA?.slice(0, 7),
+]
+  .filter(Boolean)
+  .join(' · ');
+
 export default defineConfig({
   base: BASE,
+  define: { __BUILD_ID__: JSON.stringify(BUILD_ID) },
   plugins: [
     react(),
     VitePWA({

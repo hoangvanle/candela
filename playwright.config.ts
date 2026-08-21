@@ -19,7 +19,9 @@ export default defineConfig({
   },
   projects: [{ name: 'mobile-chromium', use: { ...devices['Pixel 7'], viewport: { width: 393, height: 852 } } }],
   webServer: {
-    command: 'npm run build && npx vite preview --port 4173 --host 127.0.0.1',
+    // The build lives in the `test` script, not here: a reused preview server
+    // would otherwise keep serving the previous build after a source change.
+    command: 'npx vite preview --port 4173 --host 127.0.0.1',
     url: 'http://127.0.0.1:4173/candela/',
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

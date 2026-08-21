@@ -3,6 +3,7 @@ import { countsByNote, loadNotes, makeNote, putNote } from '../db/repo';
 import type { Note } from '../db/types';
 import { navigate } from '../router';
 import { useLive } from '../store/useLive';
+import { BuildFooter } from '../ui/BuildFooter';
 import { NavBar } from '../ui/NavBar';
 import { noteLabel } from './Capture';
 
@@ -10,6 +11,8 @@ const MAX_LEVEL = 6;
 const MAX_CLASS = 6;
 
 type Numbers = { level: number; block: number; classNo: number };
+
+export type UpdateControls = { buildId: string; checking: boolean; reload: () => void };
 
 /** The next class in the most recently used block (SPEC §6.1). */
 function nextInBlock(notes: Note[]): Numbers {
@@ -32,7 +35,7 @@ const isToday = (iso: string) => iso.slice(0, 10) === new Date().toISOString().s
  * Target: two taps from opening the app to a live keyboard — so the numbers are
  * already right and the only tap that matters is "Start typing".
  */
-export function NewNote() {
+export function NewNote({ update }: { update: UpdateControls }) {
   const notes = useLive(loadNotes, []);
   const counts = useLive(countsByNote, new Map());
   const [override, setOverride] = useState<Numbers | null>(null);
@@ -108,6 +111,11 @@ export function NewNote() {
             </>
           ) : null}
 
+          <BuildFooter
+            buildId={update.buildId}
+            checking={update.checking}
+            onReload={update.reload}
+          />
           <div className="tail" />
         </div>
       </div>
