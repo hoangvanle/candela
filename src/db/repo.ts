@@ -12,8 +12,8 @@
  *
  * So every write is held in `inFlight` until Dexie confirms it, and on teardown
  * whatever is still in flight is dumped to localStorage — which is synchronous,
- * so there is no window — and replayed before the next read. Costs nothing while
- * typing: the stash only happens if something is genuinely unconfirmed.
+ * so there is no window — and replayed before the app renders. Costs nothing
+ * while typing: the stash only happens if something is genuinely unconfirmed.
  */
 import { db, newId, nowISO } from './db';
 import { isOpenQuestion } from './group';
@@ -77,17 +77,46 @@ function put(table: Table, row: Note | Item | Tag): void {
 
 /**
  * Call on teardown. Synchronous, so it completes before the document goes.
+ *
+ * Merges rather than replaces. A launch that is torn down again before its
+ * replay finishes would otherwise clobber the rows it was in the middle of
+ * recovering with whatever happens to be in flight at that moment.
  */
 export function stashInFlight(): void {
   if (!inFlight.size) return;
+
+  const merged = new Map<string, Pending>();
   try {
-    localStorage.setItem(RESCUE_KEY, JSON.stringify([...inFlight.values()]));
+    const existing = localStorage.getItem(RESCUE_KEY);
+    if (existing) {
+      for (const p of JSON.parse(existing) as Pending[]) {
+        merged.set(`${p.table}:${p.row.id}`, p);
+      }
+    }
+  } catch {
+    // Unreadable or corrupt. Losing it is bad, but losing what is in flight
+    // right now would be worse, so carry on and write the current set.
+  }
+  // In flight wins on a clash: it is the newer version of the same row.
+  for (const [key, pending] of inFlight) merged.set(key, pending);
+
+  try {
+    localStorage.setItem(RESCUE_KEY, JSON.stringify([...merged.values()]));
   } catch (e) {
     console.error('[candela] could not stash unconfirmed writes', e);
   }
 }
 
-async function recoverInFlight(): Promise<void> {
+/**
+ * Replay anything the last teardown stashed. Called once, before the app renders
+ * — deliberately not from inside a read, because the live-query driven reads run
+ * their callbacks in Dexie's tracking context, where writing does not behave and
+ * awaiting a foreign promise loses the subscription.
+ *
+ * Costs nothing in the normal case: one synchronous localStorage read that finds
+ * nothing.
+ */
+export async function recoverUnconfirmedWrites(): Promise<void> {
   let raw: string | null = null;
   try {
     raw = localStorage.getItem(RESCUE_KEY);
@@ -111,13 +140,6 @@ async function recoverInFlight(): Promise<void> {
   }
 }
 
-let recovery: Promise<void> | null = null;
-
-/** Every read goes through this, so a replay always lands before the first read. */
-function recovered(): Promise<void> {
-  recovery ??= recoverInFlight();
-  return recovery;
-}
 
 /* ---------------- notes ---------------- */
 
@@ -138,13 +160,9 @@ export function makeNote(level: number, block: number, classNo: number): Note {
 
 export const putNote = (note: Note): void => put('notes', note);
 
-export const loadNote = async (id: ID): Promise<Note | undefined> => {
-  await recovered();
-  return db.notes.get(id);
-};
+export const loadNote = (id: ID): Promise<Note | undefined> => db.notes.get(id);
 
 export async function loadNotes(): Promise<Note[]> {
-  await recovered();
   const rows = await db.notes.toArray();
   return rows
     .filter((n) => !n.deletedAt)
@@ -186,21 +204,18 @@ export function makeItem(
 export const putItem = (item: Item): void => put('items', item);
 
 export async function loadItems(noteId: ID): Promise<Item[]> {
-  await recovered();
   const rows = await db.items.where('noteId').equals(noteId).toArray();
   return rows.filter((i) => !i.deletedAt).sort(bySort);
 }
 
 /** Every move ever written down, newest note last. Feeds the capture suggestion. */
 export async function loadAllMoves(): Promise<Item[]> {
-  await recovered();
   const rows = await db.items.toArray();
   return rows.filter((i) => i.kind === 'move' && !i.deletedAt).sort(bySort);
 }
 
 /** Line counts for the Classes list, without loading every line into memory. */
 export async function countsByNote(): Promise<Map<ID, { moves: number; lines: number; open: number }>> {
-  await recovered();
   const out = new Map<ID, { moves: number; lines: number; open: number }>();
   await db.items.each((i) => {
     if (i.deletedAt) return;
@@ -215,10 +230,7 @@ export async function countsByNote(): Promise<Map<ID, { moves: number; lines: nu
 
 /* ---------------- tags ---------------- */
 
-export const loadTags = async (): Promise<Tag[]> => {
-  await recovered();
-  return db.tags.orderBy('createdAt').toArray();
-};
+export const loadTags = (): Promise<Tag[]> => db.tags.orderBy('createdAt').toArray();
 
 export const putTag = (tag: Tag): void => put('tags', tag);
 
