@@ -73,13 +73,23 @@ npm run icons      # regenerate the home-screen icons into public/
 
 ### Getting it onto the phone
 
-`npm run dev -- --host` is enough to *use* it over the wifi, and enough for the checks in
-`CLAUDE.md` — Safari's keyboard, the safe areas, momentum scrolling.
+**https://hoangvanle.github.io/candela/**
 
-It is **not** enough for the studio. iOS only registers a service worker over HTTPS (or
-localhost), so a home-screen icon pointing at `http://192.168.…` opens a blank page the
-moment the laptop is off the network. For a prep session with no signal the built output
-has to be served from somewhere with a certificate. That host has not been picked yet.
+Open that in Safari on the iPhone, then Share → **Add to Home Screen**. It launches
+without browser chrome and works with the phone in airplane mode, because the service
+worker precaches the whole shell on first load and every note lives in IndexedDB.
+
+Pushing to `main` redeploys it — tests first, so a broken capture screen cannot reach the
+phone. `registerType: 'autoUpdate'` means the next launch with signal picks up the new
+version by itself.
+
+The repo is public only because GitHub Pages on a private repo needs a paid plan. Make it
+private again at release; the deploy will need a different host then.
+
+For local work, `npm run dev -- --host` and the Network URL still work over the wifi — but
+a home-screen icon pointing at `http://192.168.…` will not survive leaving the network,
+because iOS only registers a service worker over HTTPS. Use the Pages URL for anything
+that has to work in the studio.
 
 ## Layout
 

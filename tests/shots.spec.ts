@@ -20,7 +20,7 @@ test('screens', async ({ page }) => {
     await page.screenshot({ path: `test-results/shots/${name}.png` });
   };
 
-  await page.goto('/');
+  await page.goto('./');
   await shot('1-new-note');
 
   await page.getByRole('button', { name: 'Start typing' }).click();

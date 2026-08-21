@@ -12,7 +12,7 @@ const moveTitles = (page: Page) => page.locator('.moverow .n');
 
 /** Opens a fresh note and returns with the keyboard up in new-move mode. */
 async function startNote(page: Page) {
-  await page.goto('/');
+  await page.goto('./');
   await page.getByRole('button', { name: 'Start typing' }).click();
   await expect(composer(page)).toBeFocused();
 }
@@ -28,7 +28,7 @@ async function activeIsComposer(page: Page) {
 }
 
 test('two taps from a cold launch and the keyboard is up (§10.1)', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('./');
   // The app opens on the New note tab, so "Start typing" is the only tap needed.
   await expect(page.locator('.hero h2')).toHaveText('L1 · B1 · C1');
   await page.getByRole('button', { name: 'Start typing' }).click();

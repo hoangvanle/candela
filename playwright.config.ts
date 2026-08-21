@@ -11,7 +11,7 @@ export default defineConfig({
   retries: 0,
   reporter: process.env.CI ? 'line' : [['list']],
   use: {
-    baseURL: 'http://127.0.0.1:4173',
+    baseURL: 'http://127.0.0.1:4173/candela/',
     ...devices['iPhone 15'],
     // Keyboard focus behaviour is the thing under test; drive it for real.
     hasTouch: true,
@@ -20,7 +20,7 @@ export default defineConfig({
   projects: [{ name: 'mobile-chromium', use: { ...devices['Pixel 7'], viewport: { width: 393, height: 852 } } }],
   webServer: {
     command: 'npm run build && npx vite preview --port 4173 --host 127.0.0.1',
-    url: 'http://127.0.0.1:4173',
+    url: 'http://127.0.0.1:4173/candela/',
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
   },
